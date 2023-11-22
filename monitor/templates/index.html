@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consensus Cluster Monitor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            background: #f4f7f6;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        header {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 0;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        .table-wrapper {
+            margin: 20px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .fl-table {
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: normal;
+            border: none;
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 100%;
+            white-space: nowrap;
+            background-color: #fff;
+        }
+
+        .fl-table td, .fl-table th {
+            text-align: left;
+            padding: 12px;
+        }
+
+        .fl-table thead th {
+            background: #333;
+            color: white;
+        }
+
+        .fl-table tbody tr:nth-child(odd) {
+            background: #f2f2f2;
+        }
+
+        /* Responsive adjustments can remain the same */
+        @media (max-width: 767px) {
+            /* ... */
+        }
+
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        footer p {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Cluster Monitoring Dashboard</h1>
+    </header>
+    <main>
+        <div class="table-wrapper">
+            <table class="fl-table" id="replica-table">
+                <thead>
+                    <tr>
+                        <th>App Name</th>
+                        <th>Replica ID</th>
+                        <th>State</th>
+                        <th>Term</th>
+                    </tr>
+                </thead>
+                <tbody id="replica-table-body">
+                    <tr>
+                        <td colspan="4">Loading data...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2023 Prajjwal Nijhara</p>
+    </footer>
+
+    <script type="text/javascript">
+        async function fetchAndUpdateTable() {
+            try {
+                // url for local running: http://localhost:8000/nodes (where /nodes is the endpoint)
+                const response = await fetch(`http://${window.location.hostname}:${window.location.port}/nodes`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const data = await response.json();
+                console.log(data)
+                updateTable(data.nodes);
+            } catch (error) {
+                console.error("Failed to fetch data:", error);
+            }
+        }
+
+        function updateTable(data) {
+            const tbody = document.getElementById("replica-table-body");
+            tbody.innerHTML = '';
+            data.forEach(item => {
+                const rowHtml = `<tr>
+                    <td>${item.app_name}</td>
+                    <td>${item.id}</td>
+                    <td>${item.state}</td>
+                    <td>${item.term}</td>
+                </tr>`;
+                tbody.insertAdjacentHTML('beforeend', rowHtml);
+            });
+        }
+
+        const refreshRate = {{ refresh_rate }}; // Ensure this is dynamically set
+        fetchAndUpdateTable(); // Initial fetch
+        setInterval(fetchAndUpdateTable, refreshRate);
+    </script>
+</body>
+</html>

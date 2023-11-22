@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  node:
+    build:
+      context: .
+      dockerfile: app.Dockerfile
+    environment:
+      - APP_NAME=node
+      - SCRIPT_LEADER_PATH=/app/script_leader.sh
+      - SCRIPT_FOLLOWER_PATH=/app/script_follower.sh
+    volumes:
+      - .:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 80
+    deploy:
+      replicas: 3
+    networks:
+      - election_net
+
+  monitor:
+    build:
+      context: .
+      dockerfile: monitor.Dockerfile
+    ports:
+      - 8000:8000
+    environment:
+      - RAFT_SERVICE_NAME=node
+      - BIND_HOST=localhost
+      - BIND_PORT=8000
+      - TEMPLATES_DIR=/app/monitor/templates/
+      - REFRESH_RATE_MILLIS=1000
+    volumes:
+      - .:/app
+    command: uvicorn monitor.main:app --host 0.0.0.0 --port 8000
+    networks:
+      - election_net
+
+networks:
+  election_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.123.0/24
